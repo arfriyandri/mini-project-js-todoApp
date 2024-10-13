@@ -22,6 +22,47 @@ function generateID() {
     return +new Date();
 }
 
+const SAVE_EVENT = 'save-todo'
+const STORAGE_KEY = 'TODO_APPS'
+
+function isStorageExist() {
+    if (typeof(Storage)===undefined) {
+        alert('Browser tidak mendukung local storage')
+        return false
+    }
+    return true
+}
+
+function saveData(){
+    if (isStorageExist()) {
+        const parsed = JSON.stringify(todos)
+        localStorage.setItem(STORAGE_KEY, parsed)
+        document.dispatchEvent(new Event(SAVE_EVENT))
+    }
+}
+
+function loadDataFromStorage() {
+    const serializedData = localStorage.getItem(STORAGE_KEY)
+    let data = JSON.parse(serializedData)
+
+    if (data != null) {
+        for(const todo of data){
+            todos.push(todo)
+        }
+    }
+    document.dispatchEvent(new Event(RENDER_EVENT))
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+    if (isStorageExist) {
+        loadDataFromStorage()
+    }
+})
+
+document.addEventListener(SAVE_EVENT, function () {
+    console.log(localStorage.getItem(STORAGE_KEY))
+})
+
 function addTodo() {
     const textTitle = document.getElementById("title").value;
     const timestamp = document.getElementById("date").value;
@@ -36,6 +77,7 @@ function addTodo() {
     todos.push(todoObject);
 
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData()
 }
 
 function removeTaskFromCompleted(todoId) {
@@ -45,6 +87,7 @@ function removeTaskFromCompleted(todoId) {
 
     todos.splice(todoTarget,1)
     document.dispatchEvent(new Event(RENDER_EVENT))
+    saveData()
 }
 
 function undoTaskFromCompleted(todoId) {
@@ -54,6 +97,7 @@ function undoTaskFromCompleted(todoId) {
    
     todoTarget.isCompleted = false;
     document.dispatchEvent(new Event(RENDER_EVENT));
+    saveData()
   }
 
 document.addEventListener(RENDER_EVENT, function () {
